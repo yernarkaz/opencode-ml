@@ -1,0 +1,52 @@
+{
+  "version": "1.0",
+  "skill": "ml-evaluation",
+  "cases": [
+    {
+      "id": "eval_001",
+      "name": "Regression evaluation on original scale after log transform",
+      "input": "Evaluate the regression model predictions and compute MAE and R². The target was log-transformed before training.",
+      "expected_behaviors": [
+        "Applies expm1 to predictions before computing any metric",
+        "Clips negative predictions before inverse transform: np.where(pred < 0, 0.00001, pred)",
+        "Computes MAE and R² on the original-scale (non-log) values",
+        "Warns if evaluation is attempted on log-transformed values"
+      ],
+      "should_not": [
+        "Compute MAE or R² directly on log1p-transformed predictions",
+        "Skip the expm1 inverse transform step",
+        "Skip clipping negative predictions"
+      ]
+    },
+    {
+      "id": "eval_002",
+      "name": "Multi-target regression acceptance gate check",
+      "input": "Does the multi-target regression model meet the acceptance criteria to promote from D to Q?",
+      "expected_behaviors": [
+        "Reports per-target R² and MAPE separately for each output",
+        "Identifies the worst-performing target and uses it as the gating metric",
+        "Applies per-target acceptance thresholds as defined in the use-case docs/program.md",
+        "States a clear pass/fail verdict for D→Q promotion"
+      ],
+      "should_not": [
+        "Use average R² across targets as the sole acceptance criterion",
+        "Compute MAPE without masking zero-valued targets (would produce inf)"
+      ]
+    },
+    {
+      "id": "eval_003",
+      "name": "Binary classification calibration check",
+      "input": "The model has high AUC but stakeholders say the risk scores don't feel reliable. What should I check?",
+      "expected_behaviors": [
+        "Recommends a calibration curve (reliability diagram) comparing predicted probabilities to actual positive rates",
+        "Suggests Platt scaling or isotonic regression as calibration methods if the model is miscalibrated",
+        "Checks the Brier score as a combined discrimination + calibration metric",
+        "Notes that LightGBM and CatBoost raw outputs are not always well-calibrated probabilities"
+      ],
+      "should_not": [
+        "Dismiss the concern because AUC is high",
+        "Suggest retraining from scratch as the first response to calibration issues"
+      ]
+    }
+  ]
+}

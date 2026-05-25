@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "skill": "ml-model-development",
+  "cases": [
+    {
+      "id": "model_001",
+      "name": "LightGBM binary classification with temporal split",
+      "input": "Write the training loop for a LightGBM binary classification model on a time-series dataset.",
+      "expected_behaviors": [
+        "Uses only training-time features (not inference-only features) for model training",
+        "Applies temporal train/val/test split: e.g. train_end = max_date - 365d, val_end = max_date - 90d",
+        "Uses temporal cross-validation (time-ordered folds), not random k-fold",
+        "Logs avg_average_precision and roc_auc per fold to MLflow",
+        "Sets the binary classification objective (binary or cross_entropy)"
+      ],
+      "should_not": [
+        "Use inference-only features (unavailable for new records at training time) in training",
+        "Use random k-fold cross-validation on temporal data",
+        "Use sklearn's KFold or StratifiedKFold without accounting for time ordering"
+      ]
+    },
+    {
+      "id": "model_002",
+      "name": "Quantile regression with log transform",
+      "input": "Set up a LightGBM model for a regression target with a right-skewed distribution.",
+      "expected_behaviors": [
+        "Applies log1p transform to the target before training",
+        "Uses quantile regression objective with alpha=0.5 (median regression) for skewed targets",
+        "Applies expm1 inverse transform to predictions before evaluation",
+        "Clips negative predictions: np.where(pred < 0, 0.00001, pred)",
+        "Evaluates on original scale (MAE, R²) not on log scale"
+      ],
+      "should_not": [
+        "Evaluate predictions on log1p scale",
+        "Use MSE/RMSE objective instead of quantile alpha=0.5 for skewed targets",
+        "Skip the negative prediction clip"
+      ]
+    },
+    {
+      "id": "model_003",
+      "name": "MultiOutputRegressor feature importance",
+      "input": "Extract feature importances from a MultiOutputRegressor model.",
+      "expected_behaviors": [
+        "Accesses feature importances via model.estimators_[i].feature_importances_ for each target",
+        "Explains that MultiOutputRegressor wraps individual estimators and has no top-level feature_importances_ attribute",
+        "Shows how to average importances across all target estimators",
+        "Lists the target names to clarify which estimator index corresponds to which target"
+      ],
+      "should_not": [
+        "Access model.feature_importances_ directly on MultiOutputRegressor",
+        "Assume a single estimator covers all targets"
+      ]
+    }
+  ]
+}

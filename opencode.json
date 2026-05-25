@@ -1,0 +1,103 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "model": "github-copilot/claude-sonnet-4.6",
+  "small_model": "github-copilot/claude-haiku-4.5",
+
+  "plugin": [
+    "opencode-copilot-auth@latest"
+  ],
+
+  "default_agent": "ml-orchestrator",
+
+  "share": "disabled",
+
+  "snapshot": false,
+
+  "instructions": [],
+
+  "formatter": {
+    "ruff-format": {
+      "command": ["ruff", "format", "$FILE"],
+      "extensions": [".py", ".pyi"]
+    },
+    "ruff-check": {
+      "command": ["ruff", "check", "--fix", "$FILE"],
+      "extensions": [".py", ".pyi"]
+    }
+  },
+
+  "mcp": {
+    "sequential-thinking": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "enabled": true
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    }
+  },
+
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "rm *": "ask",
+      "git push *": "ask",
+      "git reset *": "ask",
+      "pip install *": "ask",
+      "conda install *": "ask",
+      "poetry add *": "ask",
+      "az ml *": "ask"
+    },
+    "external_directory": {
+      "~/datasets/**": "allow",
+      "/data/**": "allow",
+      "/tmp/**": "allow",
+      "/dbfs/**": "allow"
+    },
+    "doom_loop": "allow"
+  },
+
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 12000
+  },
+
+  "watcher": {
+    "ignore": [
+      "mlruns/**",
+      "lightning_logs/**",
+      "wandb/**",
+      "*.ckpt",
+      "*.pt",
+      "*.pth",
+      "*.h5",
+      "*.onnx",
+      "*.safetensors",
+      ".ipynb_checkpoints/**",
+      "data/raw/**",
+      "data/processed/**",
+      "outputs/**",
+      ".venv/**",
+      "__pycache__/**",
+      ".mypy_cache/**",
+      ".pytest_cache/**",
+      "*.parquet",
+      "*.pkl"
+    ]
+  },
+
+  "lsp": {
+    "mypy": {
+      "command": ["uv", "run", "pylsp"],
+      "extensions": [".py", ".pyi"]
+    },
+    "ruff": {
+      "command": ["uv", "run", "ruff", "server"],
+      "extensions": [".py", ".pyi"]
+    }
+  }
+}

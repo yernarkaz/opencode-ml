@@ -1,0 +1,53 @@
+{
+  "version": "1.0",
+  "skill": "ml-deployment",
+  "cases": [
+    {
+      "id": "deploy_001",
+      "name": "First deployment to D environment",
+      "input": "Deploy a trained LightGBM model to the dev (D) environment for the first time.",
+      "expected_behaviors": [
+        "Creates an online endpoint if it does not exist",
+        "Uses az ml online-deployment create with --all-traffic flag to route 100% traffic to new deployment",
+        "Follows D → Q → P promotion sequence (starts at D, does not skip to Q)",
+        "Names the deployment following the model registry naming convention (e.g. my_model_v1)",
+        "References the scoring script with the correct PYTHONPATH (aml/pipeline/src)"
+      ],
+      "should_not": [
+        "Omit --all-traffic on first deployment (would leave 0% traffic to the new deployment)",
+        "Skip D and deploy directly to Q or P",
+        "Use az ml online-endpoint create for re-deploying to an existing endpoint"
+      ]
+    },
+    {
+      "id": "deploy_002",
+      "name": "Update existing endpoint without duplicate deployment",
+      "input": "I need to update an inference endpoint with a retrained model. The endpoint already exists.",
+      "expected_behaviors": [
+        "Uses az ml online-deployment update (not create) since the endpoint already exists",
+        "Warns that az ml online-deployment create on an existing endpoint creates a second deployment at 0% traffic",
+        "Verifies traffic allocation after the update",
+        "Runs a smoke test against the endpoint after deployment"
+      ],
+      "should_not": [
+        "Use az ml online-deployment create on an already-deployed endpoint",
+        "Assume the existing deployment will be replaced automatically without traffic reallocation"
+      ]
+    },
+    {
+      "id": "deploy_003",
+      "name": "Promotion from Q to P",
+      "input": "The model passed QA testing. How do I promote it to production?",
+      "expected_behaviors": [
+        "Triggers the Azure DevOps deploy-inference pipeline targeting the P environment branch",
+        "Confirms the Q endpoint health-check passed before initiating P deployment",
+        "References the endpoint_inference.yml and deployment_inference.yml from aml/mlops/definitions/",
+        "Notes that P promotion requires explicit approval gate in the ADO pipeline"
+      ],
+      "should_not": [
+        "Deploy directly to P without referencing the Q validation result",
+        "Manually run az ml online-deployment create against the P workspace without going through the ADO pipeline"
+      ]
+    }
+  ]
+}

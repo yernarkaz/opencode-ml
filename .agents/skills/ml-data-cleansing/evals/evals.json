@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "skill": "ml-data-cleansing",
+  "cases": [
+    {
+      "id": "clean_001",
+      "name": "High-cardinality categorical null handling",
+      "input": "A categorical column named 'product_category' has 8% nulls in the training set. How should I handle them?",
+      "expected_behaviors": [
+        "Recommends filling with a sentinel string (e.g. 'UNKNOWN') rather than dropping rows",
+        "Explains that dropping rows in a sparse dataset loses training signal",
+        "Suggests adding a binary has_product_category flag if the null itself may be predictive",
+        "Does NOT recommend mode imputation for high-cardinality categoricals"
+      ],
+      "should_not": [
+        "Recommend dropping rows with null product_category",
+        "Recommend mode imputation without caveats for high-cardinality columns"
+      ]
+    },
+    {
+      "id": "clean_002",
+      "name": "High cardinality entity ID encoding",
+      "input": "An entity ID column has over 4000 unique values. What encoding strategy should I use?",
+      "expected_behaviors": [
+        "Recommends target encoding or frequency/count encoding",
+        "Warns that target encoding must be computed inside CV folds to prevent leakage",
+        "States that one-hot encoding is impractical at 4000+ cardinality",
+        "Mentions that LightGBM and CatBoost can handle high-cardinality categoricals natively as category dtype"
+      ],
+      "should_not": [
+        "Recommend one-hot encoding for 4000+ unique values",
+        "Apply target encoding across the full dataset before splitting (leakage)"
+      ]
+    },
+    {
+      "id": "clean_003",
+      "name": "Deduplication on composite key",
+      "input": "I suspect there are duplicate rows in the training dataset. How should I deduplicate?",
+      "expected_behaviors": [
+        "Identifies the natural composite key for the dataset (e.g. entity_id + date + context_id)",
+        "Keeps the most recent row if duplicates exist with different feature values",
+        "Verifies duplicate count before and after deduplication",
+        "Does not deduplicate on a single column if the same entity can appear at multiple contexts or dates"
+      ],
+      "should_not": [
+        "Deduplicate on a single ID column without considering the full natural key",
+        "Drop all columns and deduplicate on the full row without explaining the key"
+      ]
+    }
+  ]
+}

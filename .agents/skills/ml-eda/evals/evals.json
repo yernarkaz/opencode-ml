@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "skill": "ml-eda",
+  "cases": [
+    {
+      "id": "eda_001",
+      "name": "Parquet null profiling before training",
+      "input": "Profile features.parquet and identify columns with high null rates before training.",
+      "expected_behaviors": [
+        "Calls profile_dataset tool before writing any custom pandas code",
+        "Reports null_pct per column and flags columns above 20%",
+        "Checks cardinality of categorical columns",
+        "Notes the shape (rows, cols) of the dataset"
+      ],
+      "should_not": [
+        "Write raw pandas code to compute nulls before calling profile_dataset",
+        "Treat high cardinality as an error without explaining the implication"
+      ]
+    },
+    {
+      "id": "eda_002",
+      "name": "Leakage audit on temporal cutoff column",
+      "input": "Check whether any features might be leaking future information through the offset_date cutoff column.",
+      "expected_behaviors": [
+        "Explains that offset_date is a per-row cutoff, not a global split",
+        "Warns that all feature lookbacks must filter on < offset_date for the specific row",
+        "Flags any features that are only available after the cutoff date (inference-time unavailable features)",
+        "Distinguishes features available at training time from those only available at inference time"
+      ],
+      "should_not": [
+        "Treat offset_date as a global train/test split date",
+        "Use inference-only features in the training feature set"
+      ]
+    },
+    {
+      "id": "eda_003",
+      "name": "Binary target distribution check",
+      "input": "The model's positive rate looks very low. Check the target distribution and tell me if it's expected.",
+      "expected_behaviors": [
+        "Runs profile_dataset with the target column specified",
+        "Reports the positive_rate_pct from target_analysis",
+        "Asks the user to confirm the expected positive rate range for their use-case",
+        "Flags if the rate is unusually low and suggests checking date filters and data pipeline"
+      ],
+      "should_not": [
+        "Recommend oversampling or SMOTE without first confirming the actual rate",
+        "Assume a fixed expected positive rate without referencing the user's use-case baseline"
+      ]
+    }
+  ]
+}

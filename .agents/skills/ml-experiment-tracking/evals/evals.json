@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "skill": "ml-experiment-tracking",
+  "cases": [
+    {
+      "id": "tracking_001",
+      "name": "Fetch MLflow tracking URI from AML workspace",
+      "input": "How do I get the MLflow tracking URI for my Azure ML workspace?",
+      "expected_behaviors": [
+        "Shows ml_client.workspaces.get(workspace_name).mlflow_tracking_uri pattern",
+        "Does NOT suggest reading MLFLOW_TRACKING_URI from environment variable as primary method",
+        "Shows mlflow.set_tracking_uri(uri) call after resolving the URI",
+        "Mentions az ml workspace show --query mlflowTrackingUri as the CLI equivalent"
+      ],
+      "should_not": [
+        "Hardcode a tracking URI",
+        "Treat MLFLOW_TRACKING_URI env var as the primary/only resolution method"
+      ]
+    },
+    {
+      "id": "tracking_002",
+      "name": "Log metrics without double start_run on AML compute",
+      "input": "I want to log roc_auc and avg_average_precision after each CV fold in a training script running on AML compute.",
+      "expected_behaviors": [
+        "Checks os.environ.get('AZUREML_RUN_ID') to detect AML compute environment",
+        "On AML compute: logs directly via mlflow.log_metric without calling mlflow.start_run()",
+        "On local compute: wraps with mlflow.active_run() check before starting a run",
+        "Uses consistent metric name format (e.g. roc_auc not roc-auc)"
+      ],
+      "should_not": [
+        "Unconditionally call mlflow.start_run() at the top of the script",
+        "Call mlflow.end_run() inside AML compute code"
+      ]
+    },
+    {
+      "id": "tracking_003",
+      "name": "Query top runs by metric",
+      "input": "Find the top 5 training runs from my experiment sorted by avg_average_precision.",
+      "expected_behaviors": [
+        "Uses run_mlflow_query tool with the correct experiment_name and order_by_metric",
+        "Sets top_n=5",
+        "Summarises the metrics and params of the returned runs",
+        "Notes that the tracking URI must be resolved first if not already set"
+      ],
+      "should_not": [
+        "Write custom MLflow client code from scratch when run_mlflow_query tool is available",
+        "Query with an incorrect experiment name format (e.g. wrong separator)"
+      ]
+    }
+  ]
+}
