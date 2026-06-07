@@ -11,6 +11,46 @@
   "default_agent": "ml-orchestrator",
 
   "share": "disabled",
+  "provider": {
+    "llama.cpp": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "llama.cpp (OpenAI Compatible)",
+      "options": {
+        "baseURL": "http://192.168.2.114:8080/v1",
+        "apiKey": "1234"
+      },
+      "models": {
+        "qwen3.6-27b": {
+          "name": "Qwen 3.6 27B",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "limit": {
+            "context": 100000,
+            "output": 32000
+          },
+          "temperature": true,
+          "reasoning": true,
+          "attachment": false,
+          "tool_call": true,
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cache_read": 0,
+            "cache_write": 0
+          }
+        }
+      }
+    }
+  },
 
   "snapshot": false,
 
