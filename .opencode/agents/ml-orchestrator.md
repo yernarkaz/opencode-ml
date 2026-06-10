@@ -1,6 +1,6 @@
 ---
 description: Primary orchestrator for end-to-end ML pipeline workflows across Azure ML repos. Routes tasks to the right specialist subagent based on the current pipeline stage. Use this as the entry point for any ML task that spans more than one stage.
-model: github-copilot/claude-sonnet-4.6
+# model: github-copilot/claude-sonnet-4.6
 temperature: 0.2
 steps: 40
 mode: primary
