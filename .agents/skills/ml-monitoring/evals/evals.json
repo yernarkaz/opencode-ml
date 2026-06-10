@@ -1,0 +1,92 @@
+{
+  "version": "1.0",
+  "skill": "ml-monitoring",
+  "cases": [
+    {
+      "id": "mon_001",
+      "name": "Endpoint health check after deployment",
+      "input": "Check the health of our production endpoint after the latest deployment.",
+      "expected_behaviors": [
+        "Runs az ml online-endpoint show to verify provisioningState is Succeeded",
+        "Runs az ml online-deployment show to check requestFailedCount vs requestSucceededCount",
+        "Retrieves recent deployment logs with az ml online-deployment get-logs",
+        "Reports failure rate as a percentage and flags if above 1%",
+        "Checks for OutOfMemoryError, ConnectionRefused, or Timeout in logs"
+      ],
+      "should_not": [
+        "Only check endpoint state without checking deployment health",
+        "Ignore deployment logs — errors may not show in endpoint status",
+        "Assume endpoint is healthy if provisioningState is Succeeded without checking request metrics"
+      ]
+    },
+    {
+      "id": "mon_002",
+      "name": "Data drift detection on production features",
+      "input": "I want to check if there's data drift in our production features compared to the baseline.",
+      "expected_behaviors": [
+        "Uses a production baseline (not training data) for comparison",
+        "Computes PSI for numeric features with threshold > 0.25 for warning",
+        "Computes KS test for numeric features with p-value < 0.05 for warning",
+        "Computes chi-squared test for categorical features",
+        "Reports per-feature drift metrics and flags features exceeding thresholds"
+      ],
+      "should_not": [
+        "Use training data as the baseline for drift detection",
+        "Only compute one drift metric — should use at least PSI and KS test",
+        "Ignore categorical features in drift analysis",
+        "Treat seasonal shifts as drift without considering seasonality"
+      ]
+    },
+    {
+      "id": "mon_003",
+      "name": "Model performance drift investigation",
+      "input": "Our model predictions seem to have shifted in production. Investigate the drift.",
+      "expected_behaviors": [
+        "Compares prediction distributions between baseline and current periods using PSI",
+        "Checks feature attribution drift using feature importance ranking correlation",
+        "Reports prediction mean shift and standard deviation ratio",
+        "Correlates prediction drift with feature drift to identify root cause",
+        "Recommends retraining if drift is sustained and performance degraded > 10%"
+      ],
+      "should_not": [
+        "Only check prediction distribution without checking feature drift",
+        "Recommend immediate retraining without confirming drift is sustained (> 2 weeks)",
+        "Ignore the possibility that upstream data changes caused the prediction shift"
+      ]
+    },
+    {
+      "id": "mon_004",
+      "name": "Configure Azure ML monitoring schedule",
+      "input": "Set up automated data drift monitoring for our endpoint on a weekly schedule.",
+      "expected_behaviors": [
+        "Creates a monitoring YAML with target dataset, baseline dataset, and drift thresholds",
+        "Uses az ml schedule create with the monitoring YAML",
+        "Configures a cron schedule (e.g., 0 0 * * 1 for weekly Monday)",
+        "Defines alert thresholds per the drift threshold table (PSI > 0.25, KS p-value < 0.05)",
+        "Confirms the schedule was created and is enabled"
+      ],
+      "should_not": [
+        "Use training data as the baseline dataset in the monitoring configuration",
+        "Set thresholds that are too sensitive (e.g., PSI > 0.05) causing constant false positives",
+        "Create the schedule without verifying the workspace has monitoring features enabled"
+      ]
+    },
+    {
+      "id": "mon_005",
+      "name": "Production data quality check",
+      "input": "Check if there are any data quality issues in our production data — null rates, unexpected values.",
+      "expected_behaviors": [
+        "Compares current null rates against baseline null rates with 1.5x increase threshold",
+        "Checks numeric columns for values outside expected min/max ranges",
+        "Reports per-column issues with actual vs expected values",
+        "Distinguishes between new-entity nulls (expected) and unexpected null increases",
+        "Provides actionable summary of which columns need investigation"
+      ],
+      "should_not": [
+        "Flag nulls for new entities as data quality issues without considering entity age",
+        "Only check null rates without checking value ranges",
+        "Report issues without providing actual vs expected values for context"
+      ]
+    }
+  ]
+}
