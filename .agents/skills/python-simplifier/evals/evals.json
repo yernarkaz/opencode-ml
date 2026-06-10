@@ -1,0 +1,40 @@
+{
+  "evals": [
+    {
+      "id": "eval-001",
+      "name": "Remove duplicate helper functions",
+      "description": "Given two modules with identical helper functions, extract to shared utility",
+      "input": "Two Python files each containing a duplicate `format_date()` function",
+      "expected": "Single shared `format_date()` in a utils module with imports in both original files",
+      "criteria": [
+        "No duplicate function definitions remain",
+        "Both modules import from the shared utility",
+        "Function signature and behavior unchanged"
+      ]
+    },
+    {
+      "id": "eval-002",
+      "name": "Convert verbose loops to comprehensions",
+      "description": "Replace manual for-loop with append pattern using list/dict comprehensions",
+      "input": "Python code with for loops that build lists or dicts via append/assignment",
+      "expected": "Equivalent list or dictionary comprehension",
+      "criteria": [
+        "Comprehension produces identical output",
+        "No side effects introduced",
+        "Readability is maintained or improved"
+      ]
+    },
+    {
+      "id": "eval-003",
+      "name": "Extract base class from duplicated service classes",
+      "description": "Given multiple service classes with identical CRUD methods, create a base class",
+      "input": "Two or more service classes with repeated get_all, get_by_id, create methods",
+      "expected": "Abstract base class with shared methods, subclasses with only model-specific attributes",
+      "criteria": [
+        "Base class encapsulates all shared logic",
+        "Subclasses only define model-specific configuration",
+        "No behavioral change in subclass methods"
+      ]
+    }
+  ]
+}

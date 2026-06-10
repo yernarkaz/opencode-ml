@@ -1,0 +1,86 @@
+{
+  "version": "1.0",
+  "skill": "azure-ml-foundry-workspace",
+  "cases": [
+    {
+      "id": "aml_001",
+      "name": "Workspace creation with VNet integration",
+      "input": "Create a new Azure ML workspace with VNet integration and managed network isolation in the eastus region.",
+      "expected_behaviors": [
+        "Provides the az ml workspace create command with --public-network-access Disabled and --managed-network flags",
+        "Explains the three managed network modes: Disabled, AllowInternetOutbound, AllowOnlyApprovedOutbound",
+        "Mentions --image-build-compute for ACR image builds behind a VNet",
+        "References the workspace resource hierarchy (storage, key vault, ACR, App Insights)",
+        "Advises on private DNS zones required for managed network isolation"
+      ],
+      "should_not": [
+        "Create a workspace without explaining the networking implications of disabling public access",
+        "Omit the image-build-compute requirement when using managed network isolation"
+      ]
+    },
+    {
+      "id": "aml_002",
+      "name": "Compute cluster provisioning",
+      "input": "Provision a GPU compute cluster for training with A100 GPUs that auto-scales from 0 to 4 nodes.",
+      "expected_behaviors": [
+        "Provides the az ml compute create command for AmlCompute with --min-instances 0 and --max-instances 4",
+        "Recommends an appropriate GPU SKU (e.g., Standard_NC24ads_A100_v4 for single GPU, Standard_ND96amsr_A100_v4 for multi-GPU)",
+        "Explains idle-time-before-shutdown to control when the cluster scales down",
+        "Mentions that the cluster needs proper VNet/subnet placement if the workspace uses managed networking",
+        "Notes that quota must be available for the selected VM family in the target region"
+      ],
+      "should_not": [
+        "Recommend a CPU-only SKU when the user explicitly requested GPUs",
+        "Set min-instances above 0 without explaining the cost implication of always-on clusters"
+      ]
+    },
+    {
+      "id": "aml_003",
+      "name": "Private endpoint configuration",
+      "input": "Set up private endpoints for my Azure ML workspace so that all traffic stays within the VNet.",
+      "expected_behaviors": [
+        "Lists the required private DNS zones (privatelink.api.azureml.ms, privatelink.blob.core.windows.net, etc.)",
+        "Provides az network private-endpoint create commands for the workspace and dependent resources",
+        "Explains the relationship between private endpoints, private DNS zones, and DNS resolution",
+        "Mentions that ACR requires Premium SKU for private endpoint support",
+        "References the networking.md reference file for full VNet configuration details"
+      ],
+      "should_not": [
+        "Suggest using public endpoints alongside private endpoints for the same service",
+        "Omit the private DNS zone configuration, which is required for name resolution"
+      ]
+    },
+    {
+      "id": "aml_004",
+      "name": "Managed identity setup",
+      "input": "Configure managed identities so my compute cluster can access the workspace storage account and ACR.",
+      "expected_behaviors": [
+        "Explains the difference between system-assigned and user-assigned managed identities",
+        "Provides az role assignment create commands for Storage Blob Data Reader on the storage account",
+        "Provides ACR pull role assignment for the compute cluster identity",
+        "Explains that compute instances and clusters each have their own identity scope",
+        "References the identities-acr-storage.md reference file for full RBAC role details"
+      ],
+      "should_not": [
+        "Recommend using storage account keys instead of managed identities",
+        "Assign overly permissive roles like Owner or Contributor when data plane roles suffice"
+      ]
+    },
+    {
+      "id": "aml_005",
+      "name": "Troubleshooting a failed deployment",
+      "input": "My online endpoint deployment failed with a HealthCheckFailure. How do I diagnose and fix it?",
+      "expected_behaviors": [
+        "Provides az ml online-deployment get-logs command to retrieve container logs",
+        "Explains the difference between inference-server logs and storage-initializer logs",
+        "Lists common causes: scoring script errors, missing dependencies, health probe misconfiguration, resource limits",
+        "Suggests checking the endpoint health endpoint and az ml online-endpoint show for current status",
+        "References the troubleshooting.md reference file for the full error reference table and debugging workflow"
+      ],
+      "should_not": [
+        "Recommend deleting and recreating the endpoint before checking logs",
+        "Assume the issue is a networking problem without first examining the container logs"
+      ]
+    }
+  ]
+}

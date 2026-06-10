@@ -16,7 +16,7 @@ docs/                       always-loaded domain context (via instructions key)
 .opencode/commands/         slash command definitions
 .opencode/plugins/          TypeScript plugin hooks
 .opencode/tools/            custom tool definitions + Python backing scripts
-.agents/skills/             on-demand skill files (auto-discovered via .git)
+.agents/skills/             on-demand skill files (loaded explicitly by agent)
 ```
 
 ---

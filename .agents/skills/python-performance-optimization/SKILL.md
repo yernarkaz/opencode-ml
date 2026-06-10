@@ -1,3 +1,16 @@
+---
+name: python-performance-optimization
+description: >
+  Comprehensive guide to profiling, analyzing, and optimizing Python code for
+  better performance. Covers CPU profiling, memory optimization, algorithmic
+  improvements, caching strategies, parallelization, and database query tuning
+  with practical benchmarks and best practices.
+compatibility: opencode
+metadata:
+  stage: utility
+  repos: opencode-ml
+---
+
 # Python Performance Optimization
 
 Comprehensive guide to profiling, analyzing, and optimizing Python code for better performance, including CPU profiling, memory optimization, and implementation best practices.

@@ -1,0 +1,40 @@
+{
+  "evals": [
+    {
+      "id": "eval-001",
+      "name": "Profile CPU bottleneck with cProfile",
+      "description": "Given a slow Python script, use cProfile to identify the top time-consuming functions",
+      "input": "Python script with multiple functions, one of which is a clear CPU bottleneck",
+      "expected": "cProfile output identifying the bottleneck function with cumulative time stats",
+      "criteria": [
+        "cProfile is used correctly with enable/disable or context manager",
+        "Results are sorted by cumulative time",
+        "The bottleneck function is identified and reported"
+      ]
+    },
+    {
+      "id": "eval-002",
+      "name": "Optimize memory with generators and __slots__",
+      "description": "Given a memory-intensive class and data processing code, reduce memory footprint",
+      "input": "Class with many instances and a function that loads large datasets into lists",
+      "expected": "Class uses __slots__, data processing uses generators instead of lists",
+      "criteria": [
+        "__slots__ is added to the class definition",
+        "List comprehensions replaced with generators where full materialization is not needed",
+        "Memory usage is measurably reduced"
+      ]
+    },
+    {
+      "id": "eval-003",
+      "name": "Add caching to expensive recursive function",
+      "description": "Given a recursive function with overlapping subproblems, add lru_cache for performance",
+      "input": "Recursive function (e.g., fibonacci, tree traversal) called repeatedly with same inputs",
+      "expected": "Function decorated with @lru_cache, with measurable speedup demonstrated",
+      "criteria": [
+        "lru_cache is applied correctly with appropriate maxsize",
+        "Cache info is accessible for monitoring",
+        "Performance improvement is demonstrated with timing comparison"
+      ]
+    }
+  ]
+}

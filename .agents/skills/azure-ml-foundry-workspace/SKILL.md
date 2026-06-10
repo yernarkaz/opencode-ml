@@ -12,6 +12,10 @@ description: |
   Comprehensive deep-dive reference for Azure Machine Learning Workspace (Azure AI Foundry) covering
   architecture, networking, private endpoints, compute, endpoints, managed identities, ACR, storage,
   all az ml CLI commands, PowerShell commands, log reading, debugging, and Terraform integration.
+compatibility: opencode
+metadata:
+  stage: infrastructure
+  repos: <your-repo-name>
 ---
 
 # Azure Machine Learning Workspace / Azure AI Foundry - Complete Deep-Dive Reference

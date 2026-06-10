@@ -48,6 +48,60 @@
         "Deploy directly to P without referencing the Q validation result",
         "Manually run az ml online-deployment create against the P workspace without going through the ADO pipeline"
       ]
+    },
+    {
+      "id": "deploy_004",
+      "name": "Blue-green deployment with traffic splitting",
+      "input": "Deploy a new model version alongside the current one with 20% traffic to the new deployment for canary testing.",
+      "expected_behaviors": [
+        "Creates a second deployment on the same endpoint with --traffic 20",
+        "Leaves the existing deployment at 80% traffic",
+        "Does not use --all-traffic flag (would route 100% to new deployment, defeating canary purpose)",
+        "Reports both deployment names and their traffic percentages after creation",
+        "Provides the scoring URI which routes traffic according to the split"
+      ],
+      "should_not": [
+        "Use --all-traffic on the canary deployment (would cut off traffic to the stable deployment)",
+        "Create a separate endpoint for the canary deployment",
+        "Forget to verify that both deployments show provisioningState=Succeeded"
+      ]
+    },
+    {
+      "id": "deploy_005",
+      "name": "Pre-deployment validation checklist",
+      "input": "Before deploying my model, run through the pre-deployment validation checklist.",
+      "expected_behaviors": [
+        "Confirms Azure login and correct subscription with az account show",
+        "Verifies the model exists in the registry with az ml model list",
+        "Runs unit tests: pytest tests/unit/ --verbose --tb=short",
+        "Runs component argument validation if pipeline YAML was changed: pytest tests/integration/test_component_argument_validation.py -v",
+        "Runs scoring script edge-case test: python aml/api/test_score_local.py",
+        "Reports pass/fail status for each checklist item"
+      ],
+      "should_not": [
+        "Proceed with deployment if any checklist item fails",
+        "Skip unit tests because 'the model was already tested during training'",
+        "Assume the scoring script works without running test_score_local.py"
+      ]
+    },
+    {
+      "id": "deploy_006",
+      "name": "Endpoint health check post-deployment",
+      "input": "The deployment just finished. Check that the endpoint is healthy and responding correctly.",
+      "expected_behaviors": [
+        "Checks endpoint provisioningState is 'Succeeded' via az ml online-endpoint show",
+        "Checks all deployments on the endpoint have provisioningState='Succeeded'",
+        "Retrieves recent deployment logs with az ml online-deployment get-logs",
+        "Scans logs for error patterns: OutOfMemoryError, ConnectionRefused, Timeout, OOMKilled, CRASH, FATAL",
+        "Invokes the endpoint with a test payload via az ml online-endpoint invoke",
+        "Validates the response is non-null JSON with predictions in expected range",
+        "Reports response latency and confirms it is under 2s for single-row payload"
+      ],
+      "should_not": [
+        "Consider the deployment successful if only the endpoint state is Succeeded but deployments are still provisioning",
+        "Skip log scanning — a deployment can be provisioned but failing on every request",
+        "Accept a null or empty response from the endpoint invocation as healthy"
+      ]
     }
   ]
 }

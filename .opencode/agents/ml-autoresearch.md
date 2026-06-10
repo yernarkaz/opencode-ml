@@ -167,6 +167,45 @@ git cherry-pick <winning-hash>
 
 ---
 
+## Error handling
+
+Errors are expected during autonomous experimentation. Handle them gracefully — log the failure and continue the loop.
+
+### Training script failure
+
+1. Check the last 50 lines of stdout/stderr for the root cause.
+2. Retry once with the same change (transient failures happen).
+3. If it fails a second time, **discard** the change (`git checkout -- .`) and log the row to `results.tsv` with `FAILED` status:
+   ```
+   <N>\t<hypothesis>\t<metric_before>\tN/A\tN/A\tFAILED\t<error_summary>
+   ```
+4. Continue to the next iteration.
+
+### Out-of-memory (OOM) errors
+
+1. If running locally, reduce the data sample (e.g., `--sample_fraction 0.5`) and retry once.
+2. If on AML, switch to a smaller compute target or reduce `--sample_fraction` in the next iteration.
+3. Log the OOM event to `results.tsv` with `FAILED` status and a note about the memory constraint.
+4. Do not retry more than once — move to the next hypothesis.
+
+### Import errors
+
+1. Verify `PYTHONPATH` includes `$PWD/aml/pipeline/src`.
+2. If the missing module is a third-party package that is not installed, log `FAILED` and skip — do not attempt to install packages.
+3. If the missing module is a local import path issue, log the corrected path in `results.tsv` with `FAILED` status and continue.
+
+### MLflow connection failures
+
+1. Retry the MLflow call with exponential backoff (1s → 2s → 4s, max 3 retries).
+2. If all retries fail, log the metric as `N/A` in `results.tsv` with `FAILED` status and a note about the MLflow connection.
+3. Continue the loop — do not halt the entire session for a tracking failure.
+
+### General rule
+
+Every failure — regardless of cause — must produce a row in `results.tsv` with `FAILED` status. The loop continues after logging.
+
+---
+
 ## What you must NOT do
 
 - Stop the loop in Mode A without user instruction

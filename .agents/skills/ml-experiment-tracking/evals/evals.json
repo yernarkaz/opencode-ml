@@ -46,6 +46,39 @@
         "Write custom MLflow client code from scratch when run_mlflow_query tool is available",
         "Query with an incorrect experiment name format (e.g. wrong separator)"
       ]
+    },
+    {
+      "id": "tracking_004",
+      "name": "Register a trained model in MLflow model registry",
+      "input": "Register my LightGBM model from the best run as 'my-usecase_model_v1' in the model registry.",
+      "expected_behaviors": [
+        "Uses mlflow.lightgbm.log_model (not mlflow.sklearn.log_model) to log the model artifact",
+        "Constructs model_uri as 'runs:/{run_id}/model' from the active run",
+        "Calls mlflow.register_model(model_uri, name='my-usecase_model_v1')",
+        "Follows the naming format {model_name}_v{version}",
+        "Outputs the registered model URI for downstream use"
+      ],
+      "should_not": [
+        "Use mlflow.sklearn.log_model for a LightGBM model",
+        "Register the model before logging it as an artifact",
+        "Hardcode a model version number without referencing the current version"
+      ]
+    },
+    {
+      "id": "tracking_005",
+      "name": "Compare past runs to decide on model promotion",
+      "input": "Compare the last 10 runs in my experiment and tell me which one has the best test_r2 for regression.",
+      "expected_behaviors": [
+        "Queries runs ordered by test_r2 DESC with top_n=10",
+        "Displays run_id, test_r2, test_mae, and key params for each run",
+        "Identifies the best run by test_r2 and reports its run_id",
+        "Notes whether the best run's metrics meet typical acceptance thresholds (e.g. R² > 0.60)"
+      ],
+      "should_not": [
+        "Recommend promotion based solely on train_r2 without checking test_r2",
+        "Ignore test_mae or test_mape when evaluating regression model quality",
+        "Suggest promoting a model that shows signs of overfitting (large train/test gap)"
+      ]
     }
   ]
 }
