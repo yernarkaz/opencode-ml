@@ -1,0 +1,83 @@
+{
+  "version": "1.0",
+  "skill": "sklearn-model-trainer",
+  "cases": [
+    {
+      "id": "sklearn_001",
+      "name": "RandomForest classification with temporal CV",
+      "input": "Train a RandomForest classifier on our temporal dataset with proper cross-validation.",
+      "expected_behaviors": [
+        "Uses TimeSeriesSplit or custom temporal splitter instead of random KFold",
+        "Encodes categorical features before passing to RandomForest",
+        "Sets random_state for reproducibility",
+        "Logs metrics to MLflow",
+        "Serializes model with joblib"
+      ],
+      "should_not": [
+        "Use random KFold on temporal data",
+        "Pass raw categorical columns to RandomForest",
+        "Use n_jobs=-1 without considering Azure ML compute size"
+      ]
+    },
+    {
+      "id": "sklearn_002",
+      "name": "GradientBoosting regression with log-transformed target",
+      "input": "Train a GradientBoosting regressor on a log-transformed target variable.",
+      "expected_behaviors": [
+        "Trains on np.log1p(target) as specified",
+        "Inverts predictions with np.expm1() before computing metrics",
+        "Clips negative predictions to small positive value after inversion",
+        "Reports metrics on original scale (not log scale)"
+      ],
+      "should_not": [
+        "Compute MAE/R2 on log-transformed predictions without inverting",
+        "Leave negative predictions uncorrected after expm1 inversion"
+      ]
+    },
+    {
+      "id": "sklearn_003",
+      "name": "HistGradientBoosting with native categorical support",
+      "input": "Train a HistGradientBoosting model that has categorical features.",
+      "expected_behaviors": [
+        "Uses categorical_features parameter to handle categoricals natively",
+        "Does NOT pre-encode categoricals (HistGradientBoosting handles them)",
+        "Does NOT require feature scaling"
+      ],
+      "should_not": [
+        "One-hot encode categoricals before HistGradientBoosting (wastes memory)",
+        "Apply StandardScaler (not needed for tree-based models)"
+      ]
+    },
+    {
+      "id": "sklearn_004",
+      "name": "Model serialization for inference pipeline",
+      "input": "Save the trained sklearn model and preprocessing artifacts for the inference pipeline.",
+      "expected_behaviors": [
+        "Uses joblib.dump() for model serialization",
+        "Saves preprocessing artifacts (scalers, encoders) separately",
+        "Logs artifacts to MLflow",
+        "Provides clear file paths for inference_model.py to load"
+      ],
+      "should_not": [
+        "Use raw pickle for serialization",
+        "Forget to save preprocessing state alongside the model",
+        "Hardcode file paths — use output_dir argument"
+      ]
+    },
+    {
+      "id": "sklearn_005",
+      "name": "SVM on large dataset warning",
+      "input": "Train an SVM model on a dataset with 500K rows.",
+      "expected_behaviors": [
+        "Warns that SVM scales poorly beyond ~100K rows",
+        "Suggests LinearSVC as an alternative for large datasets",
+        "Suggests tree-based models (RandomForest, GradientBoosting) as alternatives",
+        "If proceeding with SVM, recommends feature selection to reduce dimensionality"
+      ],
+      "should_not": [
+        "Silently train a standard SVC on 500K rows without warning",
+        "Recommend SVC for large datasets without caveats"
+      ]
+    }
+  ]
+}

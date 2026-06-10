@@ -1,0 +1,93 @@
+{
+  "version": "1.0",
+  "skill": "deep-learning-optimizer",
+  "cases": [
+    {
+      "id": "dl_001",
+      "name": "Architecture selection — tabular data with tree baseline",
+      "input": "I want to train a deep learning model on my tabular dataset. Set up the architecture and training pipeline.",
+      "expected_behaviors": [
+        "Recommends training a LightGBM/CatBoost baseline first before DL",
+        "Suggests TabularMLP with LayerNorm and GELU activations for tabular data",
+        "Provides argument parsing pattern with str_to_bool for boolean flags",
+        "Includes early stopping and learning rate scheduling in the training loop",
+        "Specifies GPU compute requirements (STANDARD_NC* SKUs)"
+      ],
+      "should_not": [
+        "Skip the tree-based baseline comparison",
+        "Use BatchNorm for small batch sizes (<256)",
+        "Use store_true/store_false for boolean CLI arguments",
+        "Hardcode MLflow tracking URI"
+      ]
+    },
+    {
+      "id": "dl_002",
+      "name": "Optuna hyperparameter tuning with pruning",
+      "input": "Set up Optuna hyperparameter tuning for my PyTorch model on Azure ML.",
+      "expected_behaviors": [
+        "Defines search spaces for learning rate (log-scale), batch size (categorical), dropout, and architecture depth",
+        "Uses TPESampler with MedianPruner for efficient search",
+        "Includes trial.report() and trial.should_prune() in the training loop",
+        "Sets reasonable trial budget (e.g., 50 trials with 2-hour timeout)",
+        "Logs Optuna best params and param importances to MLflow"
+      ],
+      "should_not": [
+        "Use grid search instead of Bayesian optimization",
+        "Omit pruning — running full epochs on bad trials wastes GPU time",
+        "Use linear scale for learning rate search",
+        "Set n_startup_trials higher than 5-10"
+      ]
+    },
+    {
+      "id": "dl_003",
+      "name": "Gradient diagnostics and regularization",
+      "input": "My model loss is NaN after a few epochs. Help me diagnose and fix the training instability.",
+      "expected_behaviors": [
+        "Checks gradient norms for exploding gradients (max norm > 10)",
+        "Recommends gradient clipping with torch.nn.utils.clip_grad_norm_",
+        "Suggests reducing learning rate by 10x as first remediation",
+        "Checks for vanishing gradients (min norm < 1e-8) and suggests GELU/LeakyReLU",
+        "Recommends adding LayerNorm if not already present"
+      ],
+      "should_not": [
+        "Suggest increasing learning rate when loss is NaN",
+        "Ignore the possibility of data issues (infinite values, missing targets)",
+        "Recommend removing dropout as a fix for NaN loss"
+      ]
+    },
+    {
+      "id": "dl_004",
+      "name": "Model export for Azure ML inference pipeline",
+      "input": "My DL model is trained. How do I export it for the Azure ML inference pipeline?",
+      "expected_behaviors": [
+        "Saves model as state_dict (not full model pickle)",
+        "Creates model_metadata.json with architecture config for reconstruction",
+        "Provides inference scoring script that loads config + state_dict",
+        "Uses torch.no_grad() context in inference",
+        "Handles device placement (cuda/cpu) in both training and inference"
+      ],
+      "should_not": [
+        "Use torch.save(model) instead of torch.save(model.state_dict())",
+        "Hardcode device as 'cuda' in inference (must detect availability)",
+        "Forget to set model.eval() before inference"
+      ]
+    },
+    {
+      "id": "dl_005",
+      "name": "Distributed training setup on AML multi-GPU",
+      "input": "I need to train my model across multiple GPUs on Azure ML compute.",
+      "expected_behaviors": [
+        "Uses DDP (DistributedDataParallel) for single-node multi-GPU",
+        "Specifies torchrun command with AZUREML environment variables",
+        "Sets LOCAL_RANK and device per process",
+        "Mentions FSDP as alternative for models too large for single GPU",
+        "Configures instance_count > 1 for multi-node training"
+      ],
+      "should_not": [
+        "Use DataParallel (legacy, single-process) instead of DDP",
+        "Forget to set torch.cuda.set_device(local_rank)",
+        "Assume all AML compute instances have multiple GPUs"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "version": "1.0",
+  "skill": "feature-engineering-toolkit",
+  "cases": [
+    {
+      "id": "fe_001",
+      "name": "Rolling aggregations with per-row offset_date",
+      "input": "Create rolling 30-day and 90-day mean and count features for the measurement_value column, grouped by part_id, respecting the per-row offset_date.",
+      "expected_behaviors": [
+        "Filters events with strict less-than on offset_date (not less-than-or-equal)",
+        "Uses per-row offset_date, not a global cutoff date",
+        "Returns NaN for entities with no history before offset_date (not zero)",
+        "Computes both mean and count for each window size",
+        "Handles date parsing with errors='coerce' and drops NaT rows"
+      ],
+      "should_not": [
+        "Use a global offset_date cutoff (e.g., df[df['date'] < max_offset])",
+        "Fill NaN rolling features with zero (distinguishes 'no data' from 'zero mean')",
+        "Include events on or after offset_date in the aggregation"
+      ]
+    },
+    {
+      "id": "fe_002",
+      "name": "Fold-aware target encoding for medium-cardinality categorical",
+      "input": "Target encode the 'supplier_code' column (35 unique values) using the defect_rate target column.",
+      "expected_behaviors": [
+        "Uses KFold cross-validation to compute out-of-fold encodings",
+        "Applies smoothing to shrink category means toward global mean",
+        "Maps unseen categories in validation folds to global mean",
+        "Returns a Series aligned to the original dataframe index",
+        "Explains that full-dataset target encoding would cause leakage"
+      ],
+      "should_not": [
+        "Compute target encoding on the full dataset without fold splitting",
+        "Use target encoding without smoothing (high overfitting risk)",
+        "Leave unseen categories as NaN without a fallback value"
+      ]
+    },
+    {
+      "id": "fe_003",
+      "name": "Feature interaction creation from top-importance features",
+      "input": "Create pairwise interaction features from the top 10 most important features identified by LightGBM.",
+      "expected_behaviors": [
+        "Creates interactions only from top-importance features, not all features",
+        "Uses PolynomialFeatures with interaction_only=True and degree=2",
+        "Drops original features from the interaction output (keeps only cross-terms)",
+        "Follows interaction creation with feature selection to control feature count",
+        "Warns about feature explosion (10 features → 45 interactions)"
+      ],
+      "should_not": [
+        "Create interactions from all features in the dataset",
+        "Use degree > 2 without explicit justification",
+        "Skip feature selection after creating interactions"
+      ]
+    },
+    {
+      "id": "fe_004",
+      "name": "Frequency encoding for high-cardinality categorical",
+      "input": "Encode the 'error_code' column which has 200+ unique values.",
+      "expected_behaviors": [
+        "Uses frequency encoding (not one-hot) for high cardinality",
+        "Computes relative frequency (normalize=True) for values between 0 and 1",
+        "Handles unseen categories at inference by mapping to 0.0 or small epsilon",
+        "Explains that frequency encoding is leakage-safe (no target information used)"
+      ],
+      "should_not": [
+        "Use one-hot encoding for 200+ unique values (feature explosion)",
+        "Use target encoding without fold-aware computation for this column",
+        "Leave unseen categories as NaN at inference without a fallback"
+      ]
+    },
+    {
+      "id": "fe_005",
+      "name": "Lag features with monthly lookback periods",
+      "input": "Create lag features for the last 1, 3, and 6 months of production_count for each machine_id, using offset_date as the cutoff.",
+      "expected_behaviors": [
+        "Computes lag features using pd.DateOffset(months=lag) for calendar-accurate periods",
+        "Filters history to events strictly before offset_date",
+        "Returns mean of values within each lag period",
+        "Returns NaN for entities with no data in a lag period (not zero)",
+        "Uses per-row offset_date for each machine_id row"
+      ],
+      "should_not": [
+        "Use pd.Timedelta(days=30*lag) instead of pd.DateOffset(months=lag) for monthly lags",
+        "Include events on or after offset_date in lag computation",
+        "Use a single global cutoff date for all rows"
+      ]
+    }
+  ]
+}

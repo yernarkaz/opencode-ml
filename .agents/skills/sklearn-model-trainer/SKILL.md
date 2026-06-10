@@ -1,278 +1,222 @@
 ---
 name: sklearn-model-trainer
-description: Scikit-learn model training skill with cross-validation, hyperparameter tuning, pipeline construction, and model serialization. Enables automated ML model development using scikit-learn's comprehensive toolkit.
-allowed-tools: Read, Grep, Write, Bash, Edit, Glob
+description: >
+  Use this skill when training scikit-learn models (RandomForest, GradientBoosting, linear models, SVM, KNN)
+  in Azure ML pipelines. Trigger on: "sklearn", "scikit-learn", "RandomForest", "GradientBoosting",
+  "linear regression", "logistic regression", "SVM", "KNN", or any mention of sklearn models.
+  Do NOT use for LightGBM/CatBoost (use ml-model-development) or deep learning (use deep-learning-optimizer).
+compatibility: opencode
 metadata:
-  mcpmarket-version: 1.0.0
+  stage: model-development
+  repos: <your-repo-name>
 ---
-# Scikit-learn Model Trainer
 
-Train machine learning models using scikit-learn with cross-validation, hyperparameter tuning, and pipeline construction.
+# Scikit-learn Model Trainer Skill
 
-## Overview
+## When to load this skill
+Load when the task involves training scikit-learn models in Azure ML pipelines — RandomForest, GradientBoosting, linear models (LinearRegression, LogisticRegression, Ridge, Lasso), SVM/SVR, KNN, or any sklearn-based model development. Do NOT use for LightGBM or CatBoost (use ml-model-development skill) or deep learning frameworks (use deep-learning-optimizer skill).
 
-This skill provides comprehensive capabilities for training machine learning models using scikit-learn. It supports the full model development workflow from data preprocessing through model training, evaluation, and serialization.
+---
 
-## Capabilities
+## Training workflow
 
-### Model Training
-- Train classification models (LogisticRegression, RandomForest, SVM, etc.)
-- Train regression models (LinearRegression, GradientBoosting, etc.)
-- Train clustering models (KMeans, DBSCAN, etc.)
-- Support for ensemble methods (VotingClassifier, Stacking, etc.)
+### Step 1 — Model selection based on problem type
 
-### Cross-Validation
-- K-fold cross-validation
-- Stratified K-fold for imbalanced datasets
-- Time series split for temporal data
-- Leave-one-out and leave-p-out validation
-- Custom cross-validation strategies
+**Classification**
+| Dataset size | Recommended model | Rationale |
+|---|---|---|
+| Small (< 10K rows) | LogisticRegression, SVC | Fast, interpretable, strong baselines |
+| Medium (10K–500K) | RandomForestClassifier, GradientBoostingClassifier | Handles nonlinearity, robust |
+| Large (> 500K) | GradientBoostingClassifier, HistGradientBoostingClassifier | Hist variant is memory-efficient |
 
-### Hyperparameter Tuning
-- GridSearchCV for exhaustive search
-- RandomizedSearchCV for random sampling
-- Halving search strategies for efficiency
-- Custom scoring functions
-- Multi-metric evaluation
+**Regression**
+| Dataset size | Recommended model | Rationale |
+|---|---|---|
+| Small (< 10K rows) | LinearRegression, Ridge | Simple baseline, interpretable |
+| Medium (10K–500K) | RandomForestRegressor, GradientBoostingRegressor | Nonlinear relationships |
+| Large (> 500K) | HistGradientBoostingRegressor | Memory-efficient, handles categoricals |
 
-### Pipeline Construction
-- Feature preprocessing pipelines
-- Column transformers for heterogeneous data
-- Feature selection integration
-- Composite pipelines with caching
-
-### Model Serialization
-- Save models with joblib (recommended)
-- Pickle serialization
-- ONNX export for interoperability
-- Model versioning support
-
-## Prerequisites
-
-### Installation
-```bash
-pip install scikit-learn>=1.0.0 joblib pandas numpy
-```
-
-### Optional Dependencies
-```bash
-# For ONNX export
-pip install skl2onnx onnxruntime
-
-# For additional preprocessing
-pip install category_encoders imbalanced-learn
-```
-
-## Usage Patterns
-
-### Basic Model Training
+**Quick selection heuristic**
 ```python
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import classification_report
-import joblib
-
-# Split data
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
-
-# Train model
-model = RandomForestClassifier(
-    n_estimators=100,
-    max_depth=10,
-    random_state=42
-)
-model.fit(X_train, y_train)
-
-# Cross-validation
-cv_scores = cross_val_score(model, X_train, y_train, cv=5, scoring='accuracy')
-print(f"CV Accuracy: {cv_scores.mean():.3f} (+/- {cv_scores.std() * 2:.3f})")
-
-# Evaluate
-y_pred = model.predict(X_test)
-print(classification_report(y_test, y_pred))
-
-# Save model
-joblib.dump(model, 'model.joblib')
+# Start with a strong baseline
+from sklearn.ensemble import HistGradientBoostingClassifier  # or Regressor
+model = HistGradientBoostingClassifier(random_state=42)
 ```
 
-### Pipeline with Preprocessing
+### Step 2 — Cross-validation setup (temporal split, NOT random KFold)
+
+For temporal datasets, random KFold introduces leakage. Use `TimeSeriesSplit` or a custom temporal splitter:
+
 ```python
-from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.impute import SimpleImputer
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.model_selection import TimeSeriesSplit
 
-# Define preprocessing
-numeric_features = ['age', 'income', 'score']
-categorical_features = ['category', 'region']
-
-numeric_transformer = Pipeline(steps=[
-    ('imputer', SimpleImputer(strategy='median')),
-    ('scaler', StandardScaler())
-])
-
-categorical_transformer = Pipeline(steps=[
-    ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
-    ('onehot', OneHotEncoder(handle_unknown='ignore'))
-])
-
-preprocessor = ColumnTransformer(
-    transformers=[
-        ('num', numeric_transformer, numeric_features),
-        ('cat', categorical_transformer, categorical_features)
-    ]
-)
-
-# Create full pipeline
-pipeline = Pipeline(steps=[
-    ('preprocessor', preprocessor),
-    ('classifier', GradientBoostingClassifier())
-])
-
-# Train
-pipeline.fit(X_train, y_train)
+# Temporal CV — respects time ordering
+tscv = TimeSeriesSplit(n_splits=5)
+for train_idx, val_idx in tscv.split(X):
+    X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
+    y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+    # train and evaluate...
 ```
 
-### Hyperparameter Tuning with GridSearchCV
-```python
-from sklearn.model_selection import GridSearchCV
+For per-row `offset_date` datasets, implement a custom splitter that respects each row's cutoff:
 
-# Define parameter grid
+```python
+def temporal_split(df, offset_date_col, train_ratio=0.8):
+    """Split respecting per-row offset_date."""
+    cutoff = df[offset_date_col].quantile(train_ratio)
+    train_mask = df[offset_date_col] < cutoff
+    return df[train_mask], df[~train_mask]
+```
+
+### Step 3 — Hyperparameter tuning grid
+
+**RandomForest**
+```python
 param_grid = {
-    'classifier__n_estimators': [50, 100, 200],
-    'classifier__max_depth': [3, 5, 10, None],
-    'classifier__learning_rate': [0.01, 0.1, 0.2]
+    "n_estimators": [100, 200, 500],
+    "max_depth": [5, 10, 20, None],
+    "min_samples_split": [2, 5, 10],
+    "min_samples_leaf": [1, 2, 4],
+    "max_features": ["sqrt", "log2", None],
+}
+```
+
+**GradientBoosting**
+```python
+param_grid = {
+    "n_estimators": [100, 200, 500],
+    "learning_rate": [0.01, 0.05, 0.1],
+    "max_depth": [3, 5, 8],
+    "subsample": [0.8, 1.0],
+    "min_samples_leaf": [5, 10, 20],
+}
+```
+
+**LogisticRegression**
+```python
+param_grid = {
+    "C": [0.01, 0.1, 1.0, 10.0],
+    "penalty": ["l1", "l2"],
+    "solver": ["liblinear", "saga"],
+}
+```
+
+**SVM/SVC**
+```python
+param_grid = {
+    "C": [0.1, 1.0, 10.0],
+    "gamma": ["scale", "auto", 0.01, 0.1],
+    "kernel": ["rbf", "linear"],
+}
+```
+
+Use `RandomizedSearchCV` for large grids (faster than exhaustive GridSearchCV):
+```python
+from sklearn.model_selection import RandomizedSearchCV
+
+search = RandomizedSearchCV(
+    estimator=model,
+    param_distributions=param_grid,
+    n_iter=50,
+    cv=tscv,
+    scoring="roc_auc",
+    n_jobs=-1,
+    random_state=42,
+)
+search.fit(X_train, y_train)
+```
+
+### Step 4 — Model evaluation and comparison
+
+```python
+from sklearn.metrics import (
+    roc_auc_score, f1_score, accuracy_score,
+    mean_absolute_error, r2_score, mean_absolute_percentage_error,
+)
+import mlflow
+
+# Classification metrics
+y_pred = best_model.predict(X_val)
+y_proba = best_model.predict_proba(X_val)[:, 1]
+
+metrics = {
+    "roc_auc": roc_auc_score(y_val, y_proba),
+    "f1": f1_score(y_val, y_pred),
+    "accuracy": accuracy_score(y_val, y_pred),
 }
 
-# Grid search
-grid_search = GridSearchCV(
-    pipeline,
-    param_grid,
-    cv=5,
-    scoring='f1_weighted',
-    n_jobs=-1,
-    verbose=2
-)
+# Regression metrics
+y_pred = best_model.predict(X_val)
+metrics = {
+    "r2": r2_score(y_val, y_pred),
+    "mae": mean_absolute_error(y_val, y_pred),
+    "mape": mean_absolute_percentage_error(y_val, y_pred),
+}
 
-grid_search.fit(X_train, y_train)
-
-print(f"Best parameters: {grid_search.best_params_}")
-print(f"Best score: {grid_search.best_score_:.3f}")
-
-# Get best model
-best_model = grid_search.best_estimator_
+# Log to MLflow
+for name, value in metrics.items():
+    mlflow.log_metric(name, value)
 ```
 
-### Feature Selection
+For regression with log-transformed targets, **always invert the transform before computing metrics**:
 ```python
-from sklearn.feature_selection import SelectFromModel, RFE
-from sklearn.ensemble import RandomForestClassifier
+import numpy as np
 
-# Method 1: SelectFromModel
-selector = SelectFromModel(
-    RandomForestClassifier(n_estimators=100, random_state=42),
-    threshold='median'
-)
-X_selected = selector.fit_transform(X_train, y_train)
-
-# Method 2: Recursive Feature Elimination
-rfe = RFE(
-    estimator=RandomForestClassifier(n_estimators=100, random_state=42),
-    n_features_to_select=10,
-    step=1
-)
-X_rfe = rfe.fit_transform(X_train, y_train)
-
-# Get selected features
-selected_features = X.columns[rfe.support_].tolist()
+# If training on log1p(target), invert predictions before evaluation
+pred_original = np.expm1(model.predict(X_val))
+pred_original = np.where(pred_original < 0, 0.00001, pred_original)
+mae = mean_absolute_error(y_val, pred_original)
 ```
 
-## Integration with Babysitter SDK
+### Step 5 — Model serialization and inference integration
 
-### Task Definition Example
-```javascript
-const sklearnTrainingTask = defineTask({
-  name: 'sklearn-model-training',
-  description: 'Train a scikit-learn model with cross-validation',
+```python
+import joblib
 
-  inputs: {
-    modelType: { type: 'string', required: true },
-    trainDataPath: { type: 'string', required: true },
-    targetColumn: { type: 'string', required: true },
-    hyperparameters: { type: 'object', default: {} },
-    cvFolds: { type: 'number', default: 5 },
-    scoringMetric: { type: 'string', default: 'accuracy' }
-  },
+# Serialize with joblib (preferred over pickle for sklearn)
+model_path = os.path.join(output_dir, "model.joblib")
+joblib.dump(best_model, model_path)
 
-  outputs: {
-    modelPath: { type: 'string' },
-    cvScores: { type: 'array' },
-    bestScore: { type: 'number' },
-    featureImportances: { type: 'object' }
-  },
+# Also save preprocessing artifacts if applicable
+joblib.dump(preprocessor, os.path.join(output_dir, "preprocessor.joblib"))
 
-  async run(inputs, taskCtx) {
-    return {
-      kind: 'skill',
-      title: `Train ${inputs.modelType} model`,
-      skill: {
-        name: 'sklearn-model-trainer',
-        context: {
-          operation: 'train_with_cv',
-          modelType: inputs.modelType,
-          trainDataPath: inputs.trainDataPath,
-          targetColumn: inputs.targetColumn,
-          hyperparameters: inputs.hyperparameters,
-          cvFolds: inputs.cvFolds,
-          scoringMetric: inputs.scoringMetric
-        }
-      },
-      io: {
-        inputJsonPath: `tasks/${taskCtx.effectId}/input.json`,
-        outputJsonPath: `tasks/${taskCtx.effectId}/result.json`
-      }
-    };
-  }
-});
+# Upload to MLflow as artifact
+mlflow.log_artifact(model_path)
 ```
 
-## Model Selection Guide
+In the inference pipeline (`inference_model.py`), load and score:
+```python
+model = joblib.load(model_path)
+predictions = model.predict(X_inference)
+```
 
-### Classification Models
+---
 
-| Model | Use Case | Pros | Cons |
-|-------|----------|------|------|
-| LogisticRegression | Binary/multiclass, interpretable | Fast, interpretable | Linear boundary |
-| RandomForestClassifier | General purpose | Robust, handles nonlinearity | Can overfit |
-| GradientBoostingClassifier | High accuracy needed | State-of-art performance | Slower training |
-| SVC | Small/medium datasets | Effective in high dimensions | Slow on large data |
-| XGBClassifier | Competition/production | Fast, accurate | Many hyperparameters |
+## Gotchas
 
-### Regression Models
+- **sklearn models do NOT handle categorical features natively.** Encode categoricals before training — use `OneHotEncoder`, `OrdinalEncoder`, or `category_encoders` (target encoding, binary encoding). Do NOT pass raw string columns to sklearn estimators.
+- **Temporal CV is mandatory for time-series data.** Random KFold splits introduce future-to-past leakage. Always use `TimeSeriesSplit` or a custom temporal splitter that respects `offset_date`.
+- **sklearn is CPU-only.** Do not request GPU compute for sklearn training jobs in Azure ML. Use CPU-based compute clusters (e.g., `Standard_DS3_v2`).
+- **`n_jobs=-1` on Azure ML compute can cause OOM.** On managed compute, set `n_jobs` to the actual core count or a conservative fraction (e.g., `n_jobs=4` on an 8-core VM).
+- **HistGradientBoosting handles categoricals natively** via `categorical_features` parameter — this is the one sklearn exception to the encoding rule.
+- **SVM scales poorly beyond ~100K rows.** Use `LinearSVC` for large datasets, or switch to tree-based models.
+- **Always set `random_state`** for reproducibility across pipeline runs.
 
-| Model | Use Case | Pros | Cons |
-|-------|----------|------|------|
-| LinearRegression | Baseline, interpretable | Simple, fast | Assumes linearity |
-| Ridge/Lasso | Regularization needed | Prevents overfitting | Still linear |
-| RandomForestRegressor | General purpose | Handles nonlinearity | Can overfit |
-| GradientBoostingRegressor | High accuracy | Excellent performance | Slower |
-| SVR | Small datasets | Robust to outliers | Slow scaling |
+---
 
-## Best Practices
+## Evaluation criteria checklist
 
-1. **Always Use Pipelines**: Prevent data leakage by including preprocessing in pipelines
-2. **Stratified Splits**: Use stratified sampling for imbalanced classification
-3. **Cross-Validation**: Never tune hyperparameters on test data
-4. **Feature Scaling**: Apply appropriate scaling for distance-based models
-5. **Random Seeds**: Set random_state for reproducibility
-6. **Model Persistence**: Use joblib over pickle for large numpy arrays
+Before handing off a trained sklearn model, verify all of the following:
 
-## References
-
-- [Scikit-learn Documentation](https://scikit-learn.org/stable/)
-- [Scikit-learn User Guide](https://scikit-learn.org/stable/user_guide.html)
-- [Claude Scientific Skills - sklearn](https://github.com/K-Dense-AI/claude-scientific-skills)
-- [ML Models as MCP Tools](https://medium.com/@premlaknaboina/how-to-wrap-machine-learning-models-as-mcp-tools-1e510b21f1f9)
+- [ ] Model was selected based on problem type (classification vs regression) and dataset size
+- [ ] Temporal cross-validation was used (NOT random KFold) — `TimeSeriesSplit` or custom temporal splitter
+- [ ] Categorical features were encoded before training (unless using HistGradientBoosting with `categorical_features`)
+- [ ] Hyperparameter tuning was performed with a reasonable search space
+- [ ] Metrics were computed on a held-out temporal validation set (not the CV folds)
+- [ ] For regression with log-transformed targets, predictions were inverted before metric computation
+- [ ] Model was serialized with `joblib` (not raw pickle)
+- [ ] Preprocessing artifacts (scalers, encoders) were saved alongside the model
+- [ ] `random_state` was set for reproducibility
+- [ ] `n_jobs` was set appropriately for the Azure ML compute size (not blindly `-1`)
+- [ ] Metrics were logged to MLflow
+- [ ] Model artifacts were logged to MLflow
