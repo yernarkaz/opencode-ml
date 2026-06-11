@@ -1,0 +1,14 @@
+%%{init: {'theme':'base','themeVariables': {'fontSize':'14px','fontFamily':'Aptos, Arial, sans-serif','primaryTextColor':'#0F172A','lineColor':'#94A3B8'}, 'flowchart': {'curve': 'linear', 'nodeSpacing': 18, 'rankSpacing': 24, 'padding': 8}} }%%
+graph LR
+    A["Manual ML work"] -->|route| B["ml-orchestrator"] --> C["Specialist agents"] -->|verify| D["Safe ML outputs"]
+    N1["CLI runs\nLeakage risk\nArg errors"]:::legacy --- A
+    N2["Plan\nBuild\nReview"]:::orchestrator --- C
+    N3["Tested code\nValid YAML\nZero leakage"]:::target --- D
+
+    classDef legacy fill:#F1F5F9,stroke:#64748B,stroke-width:2px,color:#0F172A;
+    classDef orchestrator fill:#FEF2F2,stroke:#DC2626,stroke-width:2.5px,color:#991B1B;
+    classDef target fill:#F0FDF4,stroke:#16A34A,stroke-width:2px,color:#15803D;
+
+    class A,N1 legacy;
+    class B,C,N2 orchestrator;
+    class D,N3 target;

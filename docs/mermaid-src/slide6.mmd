@@ -1,0 +1,12 @@
+%%{init: {'theme':'base','themeVariables': {'fontSize':'14px','fontFamily':'Aptos, Arial, sans-serif','primaryTextColor':'#0F172A','lineColor':'#94A3B8'}, 'flowchart': {'curve': 'linear', 'nodeSpacing': 16, 'rankSpacing': 18, 'padding': 8}} }%%
+graph LR
+    A["Slash command"] --> B["Orchestrator"] --> C["Subagent"] --> D["Skill"] --> E["Tools"] --> F["Azure ML"]
+    D -.-> G["Checklists\n+ gotchas"]
+
+    classDef agent fill:#EFF6FF,stroke:#3B82F6,stroke-width:2px,color:#1E3A8A;
+    classDef skill fill:#F0FDFA,stroke:#0D9488,stroke-width:2px,color:#115E59;
+    classDef output fill:#F0FDF4,stroke:#16A34A,stroke-width:2px,color:#14532D;
+
+    class A,B,C agent;
+    class D,G skill;
+    class E,F output;

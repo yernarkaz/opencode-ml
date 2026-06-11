@@ -1,0 +1,21 @@
+%%{init: {'theme':'base','themeVariables': {'fontSize':'14px','fontFamily':'Aptos, Arial, sans-serif','primaryTextColor':'#0F172A','lineColor':'#94A3B8'}, 'flowchart': {'curve': 'linear', 'nodeSpacing': 16, 'rankSpacing': 16, 'padding': 8}} }%%
+graph LR
+    subgraph Strengths ["What Works"]
+        direction TB
+        A["Clear role separation"]
+        B["Built-in ML guardrails"]
+        C["Useful diagnostics"]
+    end
+
+    subgraph Future ["Next Steps"]
+        direction TB
+        D["Auto-load conventions"]
+        E["Standardize gate configs"]
+        F["Add starter test scaffolds"]
+    end
+
+    classDef strength fill:#F0FDF4,stroke:#16A34A,stroke-width:2px,color:#14532D;
+    classDef improvement fill:#FFFBEB,stroke:#D97706,stroke-width:2px,color:#78350F;
+
+    class A,B,C strength;
+    class D,E,F improvement;

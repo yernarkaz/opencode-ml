@@ -1,0 +1,16 @@
+%%{init: {'theme':'base','themeVariables': {'fontSize':'14px','fontFamily':'Aptos, Arial, sans-serif','primaryTextColor':'#0F172A','lineColor':'#94A3B8'}, 'flowchart': {'curve': 'linear', 'nodeSpacing': 14, 'rankSpacing': 18, 'padding': 8}} }%%
+graph TB
+    subgraph Flow ["Execution Flow"]
+        direction LR
+        P1((Plan)) --> P2((EDA)) --> P3((Cleanse)) --> P4((Build)) --> P5((Evaluate)) --> P6((Review)) --> P7((Deploy)) --> P8((Monitor))
+    end
+    G["Mandatory gates:\nPlan and Review must pass"]:::warn
+    P1 -.-> G
+    P6 -.-> G
+
+    classDef step fill:#1E3A8A,stroke:#172554,stroke-width:1.8px,color:#FFFFFF;
+    classDef gate fill:#DC2626,stroke:#991B1B,stroke-width:1.8px,color:#FFFFFF;
+    classDef warn fill:#FEF2F2,stroke:#DC2626,stroke-width:2px,color:#991B1B;
+
+    class P2,P3,P4,P5,P7,P8 step;
+    class P1,P6 gate;
