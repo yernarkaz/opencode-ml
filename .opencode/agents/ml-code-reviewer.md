@@ -1,7 +1,7 @@
 ---
 name: ml-code-reviewer
 description: Read-only agent for reviewing ML pipeline code changes. Checks for correctness, leakage, style compliance, and AML component alignment — without modifying any files.
-# model: github-copilot/claude-haiku-4.5
+model: github-copilot/claude-haiku-4.5
 mode: subagent
 temperature: 0.1
 steps: 20

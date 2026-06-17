@@ -1,7 +1,7 @@
 ---
 name: ml-code-builder
 description: Write-capable agent for implementing and modifying Azure ML pipeline code across ML pipeline repos. Enforces all ML patterns (str_to_bool, auth, leakage guards, component YAML sync) and runs unit tests after every change. Use this agent for any task that requires editing pipeline scripts, feature engineering, training, or inference code.
-# model: github-copilot/claude-sonnet-4.6
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.15
 steps: 60
 mode: subagent

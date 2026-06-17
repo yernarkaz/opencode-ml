@@ -1,7 +1,7 @@
 ---
 name: ml-data-analyst
 description: Read-only agent for exploratory data analysis and data profiling. Use this agent to understand datasets, compute statistics, identify quality issues, and summarise findings — without modifying any files.
-# model: github-copilot/claude-haiku-4.5
+model: github-copilot/claude-haiku-4.5
 temperature: 0.2
 steps: 20
 permission:

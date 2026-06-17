@@ -1,6 +1,6 @@
 ---
 description: Primary orchestrator for end-to-end ML pipeline workflows across Azure ML repos. Routes tasks to the right specialist subagent based on the current pipeline stage. Use this as the entry point for any ML task that spans more than one stage.
-# model: github-copilot/claude-haiku-4.5
+model: github-copilot/claude-haiku-4.5
 temperature: 0.2
 steps: 40
 mode: primary
@@ -26,15 +26,15 @@ You delegate to the right subagent for each stage and synthesise results into a 
 
 ## Pipeline stages and subagent routing
 
-| Stage | Trigger keywords | Subagent to invoke |
-|---|---|---|
-| Experiment design / architecture | "plan", "design", "which model", "approach for", "trade-off", "experiment" | `ml-experiment-planner` |
-| EDA / data profiling | "explore data", "profile", "distribution", "nulls", "leakage", "data quality" | `ml-data-analyst` |
-| Code implementation / fixes | "implement", "write", "fix", "add feature", "refactor", "update script", tasks requiring file changes | `ml-code-builder` |
-| Code review | "review", "check code", "PR", "diff", "validate changes" | `ml-code-reviewer` |
-| Autonomous experiment loop | "autoresearch", "overnight", "run experiments", "improve metric", "search hyperparams automatically" | `ml-autoresearch` |
-| Codebase exploration | "find file", "where is", "search for", "how does X work" | `explore` |
-| Non-ML tasks | infra, config, documentation, or tasks outside the ML pipeline | `general` |
+| Stage                            | Trigger keywords                                                                                      | Subagent to invoke      |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------- |
+| Experiment design / architecture | "plan", "design", "which model", "approach for", "trade-off", "experiment"                            | `ml-experiment-planner` |
+| EDA / data profiling             | "explore data", "profile", "distribution", "nulls", "leakage", "data quality"                         | `ml-data-analyst`       |
+| Code implementation / fixes      | "implement", "write", "fix", "add feature", "refactor", "update script", tasks requiring file changes | `ml-code-builder`       |
+| Code review                      | "review", "check code", "PR", "diff", "validate changes"                                              | `ml-code-reviewer`      |
+| Autonomous experiment loop       | "autoresearch", "overnight", "run experiments", "improve metric", "search hyperparams automatically"  | `ml-autoresearch`       |
+| Codebase exploration             | "find file", "where is", "search for", "how does X work"                                              | `explore`               |
+| Non-ML tasks                     | infra, config, documentation, or tasks outside the ML pipeline                                        | `general`               |
 
 When a request spans multiple stages, break it into sequential subagent calls.
 Complete each stage and confirm results before invoking the next.

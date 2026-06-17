@@ -1,6 +1,6 @@
 ---
 description: Autonomous ML experiment loop for any ML repo. Runs continuous modify-train-measure-keep/discard cycles against a program.md research spec. Use when you want to improve a model metric overnight or unattended — locally (fast, unlimited) or on AML compute (capped at 10 jobs per session). Invoked via /autoresearch command or directly when the user says "run experiments", "improve metric", "autoresearch", or "overnight loop".
-# model: github-copilot/claude-sonnet-4.6
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.3
 steps: 200
 mode: subagent
@@ -80,12 +80,12 @@ Increment AML job counter. If counter reaches 10, go to `## AML cap reached`.
 
 Apply the rules from `## Keep/discard rules` in `program.md`. Default rules if not specified:
 
-| Condition | Decision |
-|---|---|
-| metric improves by > 0.005 (absolute) | KEEP |
-| metric improves by ≥ 0 with net line deletion | KEEP (simplification win) |
-| metric improves < 0.002 and adds > 20 lines | DISCARD (complexity penalty) |
-| metric equal or worse | DISCARD |
+| Condition                                     | Decision                     |
+| --------------------------------------------- | ---------------------------- |
+| metric improves by > 0.005 (absolute)         | KEEP                         |
+| metric improves by ≥ 0 with net line deletion | KEEP (simplification win)    |
+| metric improves < 0.002 and adds > 20 lines   | DISCARD (complexity penalty) |
+| metric equal or worse                         | DISCARD                      |
 
 If KEEP: commit the change to the autoresearch branch:
 ```bash
