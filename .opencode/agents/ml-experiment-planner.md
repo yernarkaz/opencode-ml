@@ -8,8 +8,6 @@ permission:
   edit: deny
   task:
     "*": deny
-mcpServers:
-  - sequential-thinking
 ---
 
 # You are the primary ML experiment planner for Azure ML models
