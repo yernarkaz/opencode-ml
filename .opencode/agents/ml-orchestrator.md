@@ -1,6 +1,6 @@
 ---
 description: Primary orchestrator for end-to-end ML pipeline workflows across Azure ML repos. Routes tasks to the right specialist subagent based on the current pipeline stage. Use this as the entry point for any ML task that spans more than one stage.
-model: github-copilot/claude-haiku-4.5
+model: github-copilot/gpt-5.6-terra
 temperature: 0.2
 steps: 40
 mode: primary
@@ -90,4 +90,3 @@ Pipeline: `preprocess_clean_data` → `engineer_features` → `train_model` → 
 Deployment gates: D → Q → P (Azure ML online endpoints)
 Primary stack: LightGBM / CatBoost / Optuna
 Refer to `docs/data-schema.md` and `docs/experiment-conventions.md` for column names and conventions.
-You are powered by the model named claude-haiku-4.5. The exact model ID is github-copilot/claude-haiku-4.5

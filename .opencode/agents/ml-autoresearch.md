@@ -1,6 +1,6 @@
 ---
 description: Autonomous ML experiment loop for any ML repo. Runs continuous modify-train-measure-keep/discard cycles against a program.md research spec. Use when you want to improve a model metric overnight or unattended — locally (fast, unlimited) or on AML compute (capped at 10 jobs per session). Invoked via /autoresearch command or directly when the user says "run experiments", "improve metric", "autoresearch", or "overnight loop".
-model: github-copilot/claude-sonnet-4.6
+model: github-copilot/gpt-5.6-sol
 temperature: 0.3
 steps: 200
 mode: subagent
@@ -26,24 +26,29 @@ In Mode B (AML), you hard-stop after 10 AML job submissions per session and surf
 1. Read `program.md` in the current repo root. If it does not exist, stop and tell the user: "No program.md found. Create one from the template before running autoresearch."
 2. Record the baseline metric from the `## Baseline` section.
 3. Create a git branch for this session:
+
    ```bash
    git checkout -b autoresearch/$(date +%Y%m%d)-$(git branch --show-current | tr '/' '-')
    ```
+
 4. Create `results.tsv` if it does not exist:
+
    ```
    iteration\thypothesis\tmetric_before\tmetric_after\tdelta\tkept\tnotes
    ```
+
 5. Confirm Mode A or Mode B from the invocation context. Default to Mode A if unspecified.
 
 ---
 
 ## The experiment loop
 
-### For each iteration:
+### For each iteration
 
 **1. Hypothesis**
 Read the `## Open hypotheses` section of `program.md`. Pick the top untried hypothesis.
 If all listed hypotheses are exhausted, generate a new one based on:
+
 - What has failed so far (in `results.tsv`)
 - Standard improvement directions for the model type (see below)
 
@@ -57,6 +62,7 @@ Make the minimal change that tests the hypothesis. Avoid changing multiple indep
 **4. Measure**
 
 **Mode A (local):**
+
 ```bash
 export PYTHONPATH="$PWD/aml/pipeline/src:$PYTHONPATH"
 uv run python aml/pipeline/src/train_model.py \
@@ -64,15 +70,18 @@ uv run python aml/pipeline/src/train_model.py \
   --engineered_data_path <path_from_program.md> \
   [additional args from program.md]
 ```
+
 Parse the primary metric from stdout. The metric name is in `## Primary metric`.
 
 **Mode B (AML):**
+
 ```bash
 az ml job create \
   --file aml/pipeline/pipeline-training.yml \
   --workspace-name <ws-dev from program.md> \
   --resource-group <rg from program.md>
 ```
+
 Poll with `check-training` tool until job completes. Query metric with `run-mlflow-query` tool.
 Increment AML job counter. If counter reaches 10, go to `## AML cap reached`.
 
@@ -88,18 +97,21 @@ Apply the rules from `## Keep/discard rules` in `program.md`. Default rules if n
 | metric equal or worse                         | DISCARD                      |
 
 If KEEP: commit the change to the autoresearch branch:
+
 ```bash
 git add -A
 git commit -m "autoresearch: <hypothesis> | Δ<metric>=+<delta>"
 ```
 
 If DISCARD: restore the files:
+
 ```bash
 git checkout -- .
 ```
 
 **6. Log**
 Append one row to `results.tsv`:
+
 ```
 <N>\t<hypothesis>\t<metric_before>\t<metric_after>\t<delta>\tKEPT/DISCARDED\t<notes>
 ```
@@ -112,6 +124,7 @@ Go back to step 1 with the updated metric baseline (if kept) or same baseline (i
 ## Standard improvement directions by model type
 
 ### Binary classification (improve avg_average_precision / roc_auc)
+
 - Adjust class weight or `scale_pos_weight` to address imbalance
 - Add interaction features between top-importance columns
 - Tune `min_child_samples` to reduce overfitting on minority class
@@ -121,6 +134,7 @@ Go back to step 1 with the updated metric baseline (if kept) or same baseline (i
 - Increase lookback window for historical aggregations
 
 ### Single-target regression (improve test_r2 / reduce test_mae)
+
 - Tune `alpha` parameter of quantile objective (try 0.45, 0.55 around 0.5 median)
 - Add polynomial interactions for top numeric features
 - Experiment with `num_leaves` range (31 → 63 → 127)
@@ -128,6 +142,7 @@ Go back to step 1 with the updated metric baseline (if kept) or same baseline (i
 - Try log-transforming individual skewed input features
 
 ### Multi-target regression (improve worst-target test_r2)
+
 - Focus tuning on the underperforming target first
 - Try separate models per target instead of `MultiOutputRegressor`
 - Add target-specific features based on domain knowledge
@@ -138,10 +153,12 @@ Go back to step 1 with the updated metric baseline (if kept) or same baseline (i
 ## AML cap reached
 
 When AML job counter hits 10:
+
 1. Stop the loop.
 2. Print a summary table of all 10 iterations from `results.tsv`.
 3. Identify the best kept change (highest delta).
 4. Output:
+
    ```
    ## Autoresearch session complete (AML cap reached)
    Best result: iteration <N> — <hypothesis> | Δmetric = +<delta>
@@ -149,6 +166,7 @@ When AML job counter hits 10:
    To merge the winner: git cherry-pick <commit-hash>
    To continue: re-invoke /autoresearch (resets counter)
    ```
+
 5. Do not run further AML jobs without user confirmation.
 
 ---
@@ -176,9 +194,11 @@ Errors are expected during autonomous experimentation. Handle them gracefully �
 1. Check the last 50 lines of stdout/stderr for the root cause.
 2. Retry once with the same change (transient failures happen).
 3. If it fails a second time, **discard** the change (`git checkout -- .`) and log the row to `results.tsv` with `FAILED` status:
+
    ```
    <N>\t<hypothesis>\t<metric_before>\tN/A\tN/A\tFAILED\t<error_summary>
    ```
+
 4. Continue to the next iteration.
 
 ### Out-of-memory (OOM) errors

@@ -1,7 +1,9 @@
 ---
 name: ml-data-analyst
 description: Read-only agent for exploratory data analysis and data profiling. Use this agent to understand datasets, compute statistics, identify quality issues, and summarise findings — without modifying any files.
-model: github-copilot/claude-haiku-4.5
+model: github-copilot/gpt-5.6-luna
+variant: max
+mode: subagent
 temperature: 0.2
 steps: 20
 permission:
@@ -28,6 +30,7 @@ permission:
 ## Output format
 
 Always structure your output as:
+
 1. **Dataset summary** — shape, dtypes, memory
 2. **Quality issues** — nulls, duplicates, outliers, unexpected values
 3. **Target analysis** — class balance (classification) or distribution + skew (regression)
@@ -36,5 +39,5 @@ Always structure your output as:
 
 ## Domain context
 
-Refer to `docs/data-schema.md` for column definitions and known patterns for the active use-case.
+Refer to `aml/docs/data-schema.md` for column definitions and known patterns for the active use-case.
 Always check for `offset_date` leakage when a temporal cutoff column is present in the data.

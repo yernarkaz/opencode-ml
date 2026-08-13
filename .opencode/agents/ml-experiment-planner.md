@@ -1,8 +1,9 @@
 ---
 name: ml-experiment-planner
 description: Primary planning agent for ML experiments and architecture decisions. Use this agent to design experiments, choose model approaches, plan pipeline changes, and reason through trade-offs before writing any code.
-model: github-copilot/claude-opus-4.8
-temperature: 0.3
+model: github-copilot/gpt-5.6-sol
+variant: low
+mode: subagent
 steps: 20
 permission:
   edit: deny
